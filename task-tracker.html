@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Collaborative AI Kanban Board</title>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-your-ad-client-id"
+     crossorigin="anonymous"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overscroll-behavior: none; }
+        .kanban-column { min-height: 300px; max-height: 70vh; overflow-y: auto; }
+        .task { cursor: grab; transition: all 0.2s ease-in-out; }
+        .task:active { cursor: grabbing; background-color: #e0e7ff; }
+        .dragging { opacity: 0.5; border: 2px dashed #6366f1; transform: rotate(3deg); }
+        .kanban-column::-webkit-scrollbar { width: 8px; }
+        .kanban-column::-webkit-scrollbar-track { background: #e5e7eb; border-radius: 10px; }
+        .kanban-column::-webkit-scrollbar-thumb { background: #9ca3af; border-radius: 10px; }
+        .action-btn { transition: all 0.3s ease; }
+        .action-btn:hover { transform: translateY(-1px); }
+        .action-btn:active { transform: translateY(0px); }
+        .modal-overlay { transition: opacity 0.3s ease; }
+        .modal-content { transition: transform 0.3s ease; }
+        .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen p-4 md:p-8">
+    <div id="loading-overlay" class="fixed inset-0 bg-white/80 backdrop-blur-sm flex flex-col justify-center items-center z-[100] text-center p-4">
+        <div class="loader"></div>
+        <p id="loading-text" class="mt-4 text-gray-600 font-semibold">Connecting to your board...</p>
+    </div>
+
+    <div class="container mx-auto max-w-7xl">
+        <header class="text-center mb-6">
+            <h1 class="text-4xl md:text-5xl font-bold text-white shadow-lg py-2">Collaborative AI Kanban Board</h1>
+            <div class="mt-2 text-white/90 text-sm">
+                <span>Your User ID: </span><span id="user-id" class="font-mono bg-white/20 px-2 py-1 rounded"></span>
+            </div>
+        </header>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <!-- Add Task Section -->
+            <div class="lg:col-span-2 p-6 bg-white/80 backdrop-blur-md shadow-xl rounded-xl">
+                <h2 class="text-2xl font-semibold text-gray-700 mb-4">Add New Task</h2>
+                <div class="flex flex-col gap-4">
+                    <input type="text" id="newTaskInput" placeholder="Enter a task or a goal for AI ideas..." class="flex-grow p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <input type="text" id="newCategoryInput" placeholder="Category (e.g., Work, Study)" class="w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 outline-none">
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <button id="addTaskBtn" class="w-full action-btn bg-indigo-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-indigo-700">Add Task</button>
+                        <button id="getIdeasBtn" class="w-full action-btn bg-purple-600 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:bg-purple-700">✨ Get Ideas</button>
+                    </div>
+                </div>
+            </div>
+            <!-- Dashboard & Tools Section -->
+            <div class="p-6 bg-white/80 backdrop-blur-md shadow-xl rounded-xl flex flex-col gap-6">
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-3 text-center">Dashboard</h2>
+                    <div class="text-center p-4 bg-gray-100 rounded-lg">
+                        <p class="text-lg text-gray-600">Total Points</p>
+                        <p id="total-points" class="font-bold text-indigo-600 text-4xl">0</p>
+                    </div>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">Pomodoro Timer</h2>
+                    <div id="pomodoro-timer" class="text-6xl font-bold text-center text-gray-800 mb-4">25:00</div>
+                    <div class="flex justify-center gap-4"><button id="pomo-start" class="action-btn bg-green-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-green-600">Start</button><button id="pomo-pause" class="action-btn bg-yellow-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-yellow-600">Pause</button><button id="pomo-reset" class="action-btn bg-red-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:bg-red-600">Reset</button></div>
+                </div>
+                <div>
+                    <h2 class="text-2xl font-semibold text-gray-700 mb-4 text-center">Actions</h2>
+                    <div class="flex flex-col gap-4">
+                         <button id="show-report-btn" class="w-full action-btn bg-blue-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-blue-600">Show Productivity Report</button>
+                         <button id="share-board-btn" class="w-full action-btn bg-teal-500 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-teal-600">Share Board</button>
+                         <button id="join-community-btn" class="w-full action-btn bg-green-600 text-white font-semibold py-3 px-4 rounded-lg shadow-md hover:bg-green-700">Join WhatsApp Community</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div id="todo" class="kanban-column bg-white/70 backdrop-blur-md p-5 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-red-400 pb-2">To Do</h3></div>
+            <div id="inprogress" class="kanban-column bg-white/70 backdrop-blur-md p-5 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-yellow-400 pb-2">In Progress</h3></div>
+            <div id="done" class="kanban-column bg-white/70 backdrop-blur-md p-5 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-green-400 pb-2">Done</h3></div>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
+            <div class="ad-placeholder bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-lg min-h-[100px] flex items-center justify-center"><span class="text-gray-500">Advertisement Area 1</span></div>
+            <div class="ad-placeholder bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-lg min-h-[100px] flex items-center justify-center"><span class="text-gray-500">Advertisement Area 2</span></div>
+        </div>
+    </div>
+
+    <!-- Modals -->
+    <div id="modal-container"></div>
+    <div id="message-box"></div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // --- Firebase Config ---
+        // IMPORTANT: Replace the placeholder values below with your own Firebase project's configuration.
+        // You can find this in your Firebase project settings (Project settings > General > Your apps > Web app).
+        const firebaseConfig = {
+            apiKey: "YOUR_API_KEY",
+            authDomain: "YOUR_PROJECT_ID.firebaseapp.com",
+            projectId: "YOUR_PROJECT_ID",
+            storageBucket: "YOUR_PROJECT_ID.appspot.com",
+            messagingSenderId: "YOUR_SENDER_ID",
+            appId: "YOUR_APP_ID"
+        };
+        
+        // This ID is used for the Firestore path. Using the projectId is a good practice.
+        const appId = firebaseConfig.projectId || 'default-kanban-app';
+
+        // --- DOM Elements ---
+        const loadingOverlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+        const userIdEl = document.getElementById('user-id');
+        const newTaskInput = document.getElementById('newTaskInput');
+        const newCategoryInput = document.getElementById('newCategoryInput');
+        const addTaskBtn = document.getElementById('addTaskBtn');
+        const getIdeasBtn = document.getElementById('getIdeasBtn');
+        const columns = { todo: document.getElementById('todo'), inprogress: document.getElementById('inprogress'), done: document.getElementById('done') };
+        const messageBox = document.getElementById('message-box');
+        const totalPointsEl = document.getElementById('total-points');
+        const pomoTimerEl = document.getElementById('pomodoro-timer'), pomoStartBtn = document.getElementById('pomo-start'), pomoPauseBtn = document.getElementById('pomo-pause'), pomoResetBtn = document.getElementById('pomo-reset');
+        const modalContainer = document.getElementById('modal-container');
+        const shareBoardBtn = document.getElementById('share-board-btn');
+        const showReportBtn = document.getElementById('show-report-btn');
+        const joinCommunityBtn = document.getElementById('join-community-btn');
+
+        // --- App State ---
+        const POINTS_PER_TASK = 10;
+        const POINTS_PER_POMO = 25;
+        let app;
+        let auth;
+        let db;
+        let currentUserId = null;
+        let boardOwnerId = null;
+        let tasks = { todo: [], inprogress: [], done: [] };
+        let points = 0;
+        let draggedTask = null;
+        let pomoInterval;
+        let pomoTime = 25 * 60;
+        let isPomoRunning = false;
+        let progressChart;
+        let unsubscribe;
+        let loadingTimeout;
+
+        // --- Core App Logic ---
+        function showLoadingError(message) {
+            const loader = loadingOverlay.querySelector('.loader');
+            if(loader) loader.style.display = 'none';
+            loadingText.innerHTML = message; // Use innerHTML to allow for line breaks
+            loadingText.classList.add('text-red-500');
+            clearTimeout(loadingTimeout); // Stop the timeout
+        }
+        
+        async function main() {
+            loadingTimeout = setTimeout(() => {
+                showLoadingError('Connection timed out. Please check your internet connection and refresh.');
+            }, 10000);
+
+            // 1. Validate Firebase Configuration has been filled out
+            if (!firebaseConfig || firebaseConfig.apiKey === "YOUR_API_KEY" || !firebaseConfig.projectId || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
+                const errorMessage = `
+                    <p class="font-bold text-lg mb-2">Setup Required: Add Firebase Configuration</p>
+                    <p class="text-sm">Please open the <code>index.html</code> file in a text editor.</p>
+                    <p class="text-sm mt-2">Find the <code>firebaseConfig</code> object and replace the placeholder values (like "YOUR_API_KEY") with your actual Firebase project credentials.</p>
+                `;
+                showLoadingError(errorMessage);
+                return;
+            }
+
+            // 2. Initialize Firebase and Auth
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+
+                onAuthStateChanged(auth, user => {
+                    if (user) {
+                        clearTimeout(loadingTimeout);
+                        currentUserId = user.uid;
+                        userIdEl.textContent = currentUserId;
+                        const urlParams = new URLSearchParams(window.location.search);
+                        boardOwnerId = urlParams.get('board') || currentUserId;
+                        setupBoardListener();
+                    } else {
+                        signInAnonymously(auth).catch(error => {
+                            console.error("Anonymous sign-in failed:", error);
+                            showLoadingError('Authentication failed. Please check your connection and browser security settings.');
+                        });
+                    }
+                });
+            } catch (error) {
+                console.error("Error during Firebase initialization:", error);
+                showLoadingError('Failed to initialize the application.');
+            }
+        }
+
+        function setupBoardListener() {
+            if (unsubscribe) unsubscribe();
+            const docRef = doc(db, "artifacts", appId, "users", boardOwnerId);
+            unsubscribe = onSnapshot(docRef, (docSnap) => {
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    tasks = data.tasks || { todo: [], inprogress: [], done: [] };
+                    points = data.points || 0;
+                } else {
+                    if(currentUserId === boardOwnerId) {
+                       setDoc(docRef, { tasks: { todo: [], inprogress: [], done: [] }, points: 0 });
+                    }
+                }
+                renderAll();
+                loadingOverlay.style.display = 'none';
+            }, (error) => {
+                console.error("Firestore snapshot error:", error);
+                showMessage("Error connecting to the board. Check permissions.", "error");
+                loadingOverlay.style.display = 'none';
+            });
+        }
+
+        async function updateFirestore() {
+            if (!boardOwnerId || currentUserId !== boardOwnerId) return;
+            const docRef = doc(db, "artifacts", appId, "users", boardOwnerId);
+            await setDoc(docRef, { tasks, points }, { merge: true });
+        }
+
+        function renderAll() {
+            renderTasks();
+            totalPointsEl.textContent = points;
+        }
+        
+        // --- Task Management ---
+        async function addTask(taskText, category) {
+            if (currentUserId !== boardOwnerId) { showMessage("Cannot add tasks in view-only mode.", "error"); return; }
+            if (!taskText || taskText.trim() === '') { showMessage('Task description cannot be empty!', 'error'); return; }
+            const newTask = {
+                id: `task-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+                text: taskText.trim(),
+                category: category.trim() || 'General',
+                completedAt: null
+            };
+            tasks.todo.push(newTask);
+            renderAll();
+            await updateFirestore();
+            return true;
+        }
+        
+        async function deleteTask(taskId) {
+            if (currentUserId !== boardOwnerId) { showMessage("Cannot delete tasks in view-only mode.", "error"); return; }
+            const confirmed = await showConfirmationModal('Are you sure you want to delete this task?');
+            if (!confirmed) return;
+
+            let taskToDelete = null, originalColumnKey = null;
+            for (const key in tasks) {
+                const task = tasks[key].find(t => t.id === taskId);
+                if (task) { taskToDelete = task; originalColumnKey = key; break; }
+            }
+            if (taskToDelete) {
+                if (originalColumnKey === 'done') { points -= POINTS_PER_TASK; }
+                tasks[originalColumnKey] = tasks[originalColumnKey].filter(t => t.id !== taskId);
+                renderAll();
+                await updateFirestore();
+                showMessage('Task deleted.', 'success');
+            }
+        }
+
+        // --- UI Rendering ---
+        function renderTasks() {
+            Object.values(columns).forEach(columnEl => {
+                const taskElements = columnEl.querySelectorAll('.task');
+                taskElements.forEach(taskNode => taskNode.remove());
+            });
+            for (const columnKey in tasks) {
+                if (columns[columnKey] && Array.isArray(tasks[columnKey])) {
+                    tasks[columnKey].forEach(task => {
+                        const taskEl = createTaskElement(task, columnKey);
+                        columns[columnKey].appendChild(taskEl);
+                    });
+                }
+            }
+        }
+
+        function createTaskElement(task, columnKey) {
+            const taskEl = document.createElement('div');
+            taskEl.className = 'task bg-white p-3 rounded-lg shadow-md mb-3 hover:shadow-lg flex flex-col gap-2';
+            taskEl.setAttribute('draggable', 'true');
+            taskEl.dataset.id = task.id;
+            
+            const mainContent = document.createElement('div');
+            mainContent.className = 'flex justify-between items-start gap-2';
+
+            const taskText = document.createElement('span');
+            taskText.textContent = task.text;
+            taskText.className = 'flex-grow';
+            mainContent.appendChild(taskText);
+
+            if (currentUserId === boardOwnerId) {
+                const buttonsContainer = document.createElement('div');
+                buttonsContainer.className = 'flex-shrink-0 flex items-center gap-2';
+                
+                if (columnKey === 'todo' || columnKey === 'inprogress') {
+                    const aiBtn = document.createElement('button');
+                    aiBtn.innerHTML = '✨';
+                    aiBtn.title = 'Break down task with AI';
+                    aiBtn.className = 'text-purple-500 hover:text-purple-700 font-bold text-lg';
+                    aiBtn.onclick = (e) => { e.stopPropagation(); handleBreakdownTask(task.text); };
+                    buttonsContainer.appendChild(aiBtn);
+                }
+
+                if (columnKey === 'done') {
+                    const shareWinBtn = document.createElement('button');
+                    shareWinBtn.innerHTML = '🚀';
+                    shareWinBtn.title = "Share this win!";
+                    shareWinBtn.className = 'text-green-500 hover:text-green-700 font-bold text-xl';
+                    shareWinBtn.onclick = (e) => { e.stopPropagation(); shareTaskWin(task.text); };
+                    buttonsContainer.appendChild(shareWinBtn);
+                }
+
+                const deleteBtn = document.createElement('button');
+                deleteBtn.innerHTML = '&times;';
+                deleteBtn.title = "Delete task";
+                deleteBtn.className = 'text-red-500 hover:text-red-700 font-bold text-xl';
+                deleteBtn.onclick = (e) => { e.stopPropagation(); deleteTask(task.id); };
+                buttonsContainer.appendChild(deleteBtn);
+                mainContent.appendChild(buttonsContainer);
+            }
+            taskEl.appendChild(mainContent);
+
+            if (task.category) {
+                const categoryEl = document.createElement('div');
+                categoryEl.textContent = task.category;
+                categoryEl.className = 'text-xs font-semibold text-white bg-indigo-400 px-2 py-1 rounded-full self-start';
+                taskEl.appendChild(categoryEl);
+            }
+            taskEl.addEventListener('dragstart', (e) => { if(currentUserId !== boardOwnerId) { e.preventDefault(); return; } draggedTask = task; e.dataTransfer.setData('text/plain', task.id); e.target.classList.add('dragging'); });
+            taskEl.addEventListener('dragend', (e) => { e.target.classList.remove('dragging'); draggedTask = null; });
+            return taskEl;
+        }
+
+        // --- Pomodoro ---
+        function startPomo() { if (isPomoRunning || currentUserId !== boardOwnerId) return; isPomoRunning = true; pomoInterval = setInterval(() => { pomoTime--; updatePomoDisplay(); if (pomoTime <= 0) { clearInterval(pomoInterval); isPomoRunning = false; points += POINTS_PER_POMO; updateFirestore(); showMessage(`Pomodoro finished! +${POINTS_PER_POMO} points!`, 'success'); pomoTime = 25 * 60; updatePomoDisplay(); } }, 1000); }
+        function pausePomo() { isPomoRunning = false; clearInterval(pomoInterval); }
+        function resetPomo() { isPomoRunning = false; clearInterval(pomoInterval); pomoTime = 25 * 60; updatePomoDisplay(); }
+        function updatePomoDisplay() { pomoTimerEl.textContent = `${String(Math.floor(pomoTime / 60)).padStart(2, '0')}:${String(pomoTime % 60).padStart(2, '0')}`; }
+
+        // --- Drag & Drop ---
+        Object.values(columns).forEach(columnEl => {
+            columnEl.addEventListener('dragover', e => { e.preventDefault(); if(currentUserId === boardOwnerId) columnEl.classList.add('bg-indigo-100'); });
+            columnEl.addEventListener('dragleave', () => columnEl.classList.remove('bg-indigo-100'));
+            columnEl.addEventListener('drop', async e => {
+                e.preventDefault();
+                columnEl.classList.remove('bg-indigo-100');
+                if (!draggedTask) return;
+                const targetColumnId = columnEl.id;
+                let originalColumnKey = Object.keys(tasks).find(key => tasks[key].some(t => t.id === draggedTask.id));
+                if (originalColumnKey && originalColumnKey !== targetColumnId) {
+                    tasks[originalColumnKey] = tasks[originalColumnKey].filter(t => t.id !== draggedTask.id);
+                    if (targetColumnId === 'done') { draggedTask.completedAt = Date.now(); points += POINTS_PER_TASK; triggerCelebration(); } 
+                    else if (originalColumnKey === 'done') { points -= POINTS_PER_TASK; draggedTask.completedAt = null; }
+                    tasks[targetColumnId].push(draggedTask);
+                    renderAll();
+                    await updateFirestore();
+                }
+                draggedTask = null;
+            });
+        });
+        
+        // --- Gemini API Integration ---
+        async function callGeminiAPI(prompt) {
+            const apiKey = ""; // Leave empty
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+            const payload = {
+                contents: [{ role: "user", parts: [{ text: prompt }] }],
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: { type: "OBJECT", properties: { tasks: { type: "ARRAY", items: { type: "STRING" } } } }
+                }
+            };
+            try {
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) throw new Error(`API Error: ${response.statusText}`);
+                const result = await response.json();
+                if (result.candidates?.[0]?.content?.parts?.[0]) {
+                    return JSON.parse(result.candidates[0].content.parts[0].text);
+                }
+                throw new Error("Invalid response from API.");
+            } catch (error) {
+                console.error("Gemini API call failed:", error);
+                showMessage("AI request failed. Please try again.", "error");
+                return null;
+            }
+        }
+
+        function handleGetTaskIdeas() {
+            if (currentUserId !== boardOwnerId) { showMessage("Cannot use AI features in view-only mode.", "error"); return; }
+            const goal = newTaskInput.value.trim();
+            if (goal === '') { showMessage('Please enter a goal to get ideas.', 'error'); return; }
+            const prompt = `Generate a list of actionable tasks for the following goal: "${goal}"`;
+            showAiModal(prompt, `Task ideas for: "${goal}"`);
+        }
+
+        function handleBreakdownTask(taskText) {
+            if (currentUserId !== boardOwnerId) { showMessage("Cannot use AI features in view-only mode.", "error"); return; }
+            const prompt = `Break down the following task into a list of smaller, actionable sub-tasks: "${taskText}"`;
+            showAiModal(prompt, `Sub-tasks for: "${taskText}"`);
+        }
+
+        // --- Modals & Messages ---
+        function showMessage(text, type = 'success') { messageBox.textContent = text; messageBox.className = 'show'; messageBox.classList.add(type); setTimeout(() => { messageBox.classList.remove('show'); }, 3000); }
+        function showConfirmationModal(message) {
+            return new Promise(resolve => {
+                const modalId = `modal-confirm-${Date.now()}`;
+                const modalHTML = `<div id="${modalId}" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"><div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-sm text-center transform scale-95"><p class="text-lg text-gray-700 mb-6">${message}</p><div class="flex justify-center gap-4"><button id="confirm-btn" class="action-btn bg-red-500 text-white font-semibold py-2 px-6 rounded-lg">Yes</button><button id="cancel-btn" class="action-btn bg-gray-300 text-gray-800 font-semibold py-2 px-6 rounded-lg">No</button></div></div></div>`;
+                modalContainer.insertAdjacentHTML('beforeend', modalHTML);
+                const modalEl = document.getElementById(modalId);
+                const contentEl = modalEl.querySelector('.modal-content');
+                setTimeout(() => contentEl.classList.remove('scale-95'), 10);
+                const cleanup = () => { contentEl.classList.add('scale-95'); setTimeout(() => modalEl.remove(), 300); };
+                modalEl.querySelector('#confirm-btn').onclick = () => { cleanup(); resolve(true); };
+                modalEl.querySelector('#cancel-btn').onclick = () => { cleanup(); resolve(false); };
+            });
+        }
+        function showReportModal() {
+            const modalId = `modal-report-${Date.now()}`;
+            const modalHTML = `<div id="${modalId}" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"><div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-2xl transform scale-95"><div id="productivity-report-content"></div><div class="mt-6 flex justify-end gap-4"><button id="download-report-btn" class="action-btn bg-blue-500 text-white font-semibold py-2 px-4 rounded-lg">Download PDF</button><button id="close-report-btn" class="action-btn bg-gray-300 text-gray-800 font-semibold py-2 px-4 rounded-lg">Close</button></div></div></div>`;
+            modalContainer.insertAdjacentHTML('beforeend', modalHTML);
+            const modalEl = document.getElementById(modalId);
+            const contentEl = modalEl.querySelector('.modal-content');
+            const reportContentEl = modalEl.querySelector('#productivity-report-content');
+            setTimeout(() => contentEl.classList.remove('scale-95'), 10);
+            const now = new Date();
+            const last7Days = new Date(new Date().setDate(now.getDate() - 7)).getTime();
+            const weeklyCompleted = tasks.done.filter(t => t.completedAt && t.completedAt >= last7Days);
+            const categoryCounts = weeklyCompleted.reduce((acc, task) => { acc[task.category] = (acc[task.category] || 0) + 1; return acc; }, {});
+            const topCat = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0];
+            reportContentEl.innerHTML = `<h2 class="text-2xl font-semibold text-gray-700 mb-4">Productivity Report</h2><div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6 text-center"><div class="p-4 bg-gray-100 rounded-lg"><p class="text-lg text-gray-600">Weekly Tasks</p><p class="text-3xl font-bold text-indigo-600">${weeklyCompleted.length}</p></div><div class="p-4 bg-gray-100 rounded-lg"><p class="text-lg text-gray-600">Top Category</p><p class="text-2xl font-bold text-indigo-600 truncate">${topCat ? topCat[0] : 'None'}</p></div></div><div><canvas id="modal-progress-chart"></canvas></div>`;
+            const labels = Array.from({length: 7}, (_, i) => { const d = new Date(); d.setDate(d.getDate() - i); return d.toLocaleDateString(undefined, { weekday: 'short' }); }).reverse();
+            const data = Array(7).fill(0);
+            weeklyCompleted.forEach(task => { const dayIndex = 6 - Math.floor((new Date() - task.completedAt) / (1000 * 60 * 60 * 24)); if (dayIndex >= 0 && dayIndex < 7) { data[dayIndex]++; } });
+            new Chart(document.getElementById('modal-progress-chart'), { type: 'line', data: { labels, datasets: [{ label: 'Tasks Completed', data, backgroundColor: 'rgba(79, 70, 229, 0.2)', borderColor: 'rgba(79, 70, 229, 1)', borderWidth: 2, tension: 0.3, fill: true }] }, options: { scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } } });
+            const cleanup = () => { contentEl.classList.add('scale-95'); setTimeout(() => modalEl.remove(), 300); };
+            modalEl.querySelector('#close-report-btn').onclick = cleanup;
+            modalEl.querySelector('#download-report-btn').onclick = () => {
+                const { jsPDF } = window.jspdf;
+                html2canvas(reportContentEl, { scale: 2 }).then(canvas => {
+                    const imgData = canvas.toDataURL('image/png');
+                    const pdf = new jsPDF({ orientation: 'p', unit: 'mm', format: 'a4' });
+                    const pdfWidth = pdf.internal.pageSize.getWidth();
+                    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
+                    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
+                    pdf.save('productivity-report.pdf');
+                });
+            };
+        }
+        function showShareModal() {
+            const modalId = `modal-share-${Date.now()}`;
+            const shareUrl = `${window.location.origin}${window.location.pathname}?board=${currentUserId}`;
+            const shareTitle = "Check out my productivity board!";
+            
+            const modalHTML = `
+                <div id="${modalId}" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-md transform scale-95">
+                        <h3 class="text-2xl font-bold text-gray-800 mb-4">Share Your Board</h3>
+                        <p class="text-gray-600 mb-4">Anyone with this link can view your board.</p>
+                        <div class="flex items-center bg-gray-100 rounded-lg p-2 mb-4">
+                            <input type="text" readonly value="${shareUrl}" class="bg-transparent w-full text-gray-700 outline-none">
+                            <button id="copy-link-btn" class="action-btn bg-indigo-500 text-white font-semibold py-1 px-3 rounded-md ml-2">Copy</button>
+                        </div>
+                        <div class="flex justify-center gap-4">
+                            <a href="https://wa.me/?text=${encodeURIComponent(shareTitle + ' ' + shareUrl)}" target="_blank" class="action-btn w-full text-center bg-green-500 text-white font-semibold py-2 px-4 rounded-lg">WhatsApp</a>
+                            <a href="mailto:?subject=${encodeURIComponent(shareTitle)}&body=${encodeURIComponent('Check out my progress here: ' + shareUrl)}" class="action-btn w-full text-center bg-gray-500 text-white font-semibold py-2 px-4 rounded-lg">Email</a>
+                            <a href="https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(shareUrl)}&title=${encodeURIComponent(shareTitle)}" target="_blank" class="action-btn w-full text-center bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg">LinkedIn</a>
+                        </div>
+                        <button id="close-share-btn" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-2xl">&times;</button>
+                    </div>
+                </div>`;
+            modalContainer.insertAdjacentHTML('beforeend', modalHTML);
+            const modalEl = document.getElementById(modalId);
+            const contentEl = modalEl.querySelector('.modal-content');
+            setTimeout(() => contentEl.classList.remove('scale-95'), 10);
+            const cleanup = () => { contentEl.classList.add('scale-95'); setTimeout(() => modalEl.remove(), 300); };
+            
+            modalEl.querySelector('#copy-link-btn').onclick = () => {
+                navigator.clipboard.writeText(shareUrl).then(() => showMessage('Link copied!', 'success'), () => showMessage('Could not copy link.', 'error'));
+            };
+            modalEl.querySelector('#close-share-btn').onclick = cleanup;
+        }
+        function showAiModal(prompt, title) {
+            const modalId = `modal-ai-${Date.now()}`;
+            const modalHTML = `<div id="${modalId}" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"><div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-lg max-h-[90vh] flex flex-col transform scale-95"><div class="flex justify-between items-center mb-4"><h3 class="text-2xl font-bold text-gray-800">${title}</h3><button id="close-ai-btn" class="text-gray-400 hover:text-gray-600 text-2xl">&times;</button></div><div id="ai-modal-body" class="flex-grow overflow-y-auto pr-2"><div class="flex justify-center items-center h-full"><div class="loader"></div></div></div><div class="mt-6 flex justify-end gap-4"><button id="add-selected-btn" class="action-btn bg-indigo-600 text-white font-semibold py-2 px-5 rounded-lg shadow-md hover:bg-indigo-700 hidden">Add Selected</button></div></div></div>`;
+            modalContainer.insertAdjacentHTML('beforeend', modalHTML);
+            const modalEl = document.getElementById(modalId);
+            const contentEl = modalEl.querySelector('.modal-content');
+            const bodyEl = modalEl.querySelector('#ai-modal-body');
+            const addBtn = modalEl.querySelector('#add-selected-btn');
+            setTimeout(() => contentEl.classList.remove('scale-95'), 10);
+            const cleanup = () => { contentEl.classList.add('scale-95'); setTimeout(() => modalEl.remove(), 300); };
+            
+            callGeminiAPI(prompt).then(response => {
+                bodyEl.innerHTML = '';
+                if (response && response.tasks && response.tasks.length > 0) {
+                    const form = document.createElement('form');
+                    response.tasks.forEach((taskText, index) => {
+                        const id = `subtask-${index}`;
+                        const div = document.createElement('div');
+                        div.className = 'flex items-center mb-3 p-2 rounded-md hover:bg-gray-100';
+                        const checkbox = document.createElement('input');
+                        checkbox.type = 'checkbox';
+                        checkbox.id = id;
+                        checkbox.value = taskText;
+                        checkbox.className = 'h-5 w-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-3';
+                        const label = document.createElement('label');
+                        label.htmlFor = id;
+                        label.textContent = taskText;
+                        label.className = 'text-gray-700 w-full';
+                        div.appendChild(checkbox);
+                        div.appendChild(label);
+                        form.appendChild(div);
+                    });
+                    bodyEl.appendChild(form);
+                    addBtn.classList.remove('hidden');
+                } else {
+                    bodyEl.innerHTML = '<p class="text-gray-500">The AI could not generate any suggestions. Please try a different prompt.</p>';
+                }
+            });
+
+            addBtn.onclick = () => {
+                const checkboxes = bodyEl.querySelectorAll('input[type="checkbox"]:checked');
+                let count = 0;
+                checkboxes.forEach(cb => {
+                    addTask(cb.value, newCategoryInput.value || 'AI Suggestion');
+                    count++;
+                });
+                if (count > 0) showMessage(`${count} tasks added.`, 'success');
+                cleanup();
+            };
+            modalEl.querySelector('#close-ai-btn').onclick = cleanup;
+        }
+
+        // --- Misc ---
+        function triggerCelebration() { confetti({ particleCount: 150, spread: 90, origin: { y: 0.6 } }); showMessage(`Task completed! +${POINTS_PER_TASK} points 🎉`, 'success'); }
+        function shareTaskWin(taskText) {
+            const message = `I just completed this task: "${taskText}"! #ProductivityWin`;
+            const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+            window.open(whatsappUrl, '_blank');
+        }
+        
+        // --- Event Listeners ---
+        addTaskBtn.addEventListener('click', () => { if (addTask(newTaskInput.value, newCategoryInput.value)) { newTaskInput.value = ''; newCategoryInput.value = ''; } });
+        getIdeasBtn.addEventListener('click', handleGetTaskIdeas);
+        pomoStartBtn.addEventListener('click', startPomo);
+        pomoPauseBtn.addEventListener('click', pausePomo);
+        pomoResetBtn.addEventListener('click', resetPomo);
+        showReportBtn.addEventListener('click', showReportModal);
+        shareBoardBtn.addEventListener('click', showShareModal);
+        joinCommunityBtn.addEventListener('click', () => {
+            const whatsappGroupLink = 'https://chat.whatsapp.com/YOUR_GROUP_INVITE_CODE';
+            window.open(whatsappGroupLink, '_blank');
+        });
+
+        // --- Initial Load ---
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePomoDisplay();
+            main();
+        });
+    </script>
+</body>
+</html>
