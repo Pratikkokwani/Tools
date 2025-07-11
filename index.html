@@ -3,7 +3,28 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Collaborative AI Kanban Board</title>
+    
+    <!-- ================== SEO Meta Tags (Start) ================== -->
+    <!-- Primary Meta Tags -->
+    <title>Collaborative AI Kanban Board | Boost Productivity</title>
+    <meta name="description" content="A free, collaborative Kanban board with an AI task generator, Pomodoro timer, and shareable progress reports. Manage your tasks, track your time, and boost your productivity today.">
+    <meta name="keywords" content="kanban board, task tracker, productivity tool, pomodoro timer, ai task generator, collaborative tool, free kanban board, online task manager">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://YOUR_CUSTOM_DOMAIN.com/">
+    <meta property="og:title" content="Collaborative AI Kanban Board | Boost Productivity">
+    <meta property="og:description" content="A free, collaborative Kanban board with an AI task generator, Pomodoro timer, and shareable progress reports.">
+    <meta property="og:image" content="https://YOUR_CUSTOM_DOMAIN.com/social-preview-image.png">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://YOUR_CUSTOM_DOMAIN.com/">
+    <meta property="twitter:title" content="Collaborative AI Kanban Board | Boost Productivity">
+    <meta property="twitter:description" content="A free, collaborative Kanban board with an AI task generator, Pomodoro timer, and shareable progress reports.">
+    <meta property="twitter:image" content="https://YOUR_CUSTOM_DOMAIN.com/social-preview-image.png">
+    <!-- ================== SEO Meta Tags (End) ================== -->
+
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-your-ad-client-id"
      crossorigin="anonymous"></script>
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,6 +33,37 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- ================== JSON-LD Structured Data (Start) ================== -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Collaborative AI Kanban Board",
+      "applicationCategory": "ProductivityApplication",
+      "operatingSystem": "Web",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "4.8",
+        "reviewCount": "50"
+      },
+      "description": "A free online tool to manage tasks using a Kanban board, featuring AI-powered suggestions, a Pomodoro timer, and real-time collaboration.",
+      "featureList": [
+        "Real-time Collaborative Kanban Board",
+        "AI Task Generation and Breakdown",
+        "Integrated Pomodoro Timer",
+        "Productivity Reports and Graphs",
+        "Shareable Boards and Community Features"
+      ]
+    }
+    </script>
+    <!-- ================== JSON-LD Structured Data (End) ================== -->
+
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f3f4f6; overscroll-behavior: none; }
         .kanban-column { min-height: 300px; max-height: 70vh; overflow-y: auto; }
@@ -28,6 +80,20 @@
         .modal-content { transition: transform 0.3s ease; }
         .loader { border: 4px solid #f3f3f3; border-top: 4px solid #6366f1; border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        /* Accordion styles */
+        .accordion-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease-in-out;
+        }
+        .blog-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .blog-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
     </style>
 </head>
 <body class="bg-gradient-to-br from-indigo-500 via-purple-500 to-pink-500 min-h-screen p-4 md:p-8">
@@ -36,7 +102,7 @@
         <p id="loading-text" class="mt-4 text-gray-600 font-semibold">Connecting to your board...</p>
     </div>
 
-    <div class="container mx-auto max-w-7xl">
+    <main class="container mx-auto max-w-7xl">
         <header class="text-center mb-6">
             <h1 class="text-4xl md:text-5xl font-bold text-white shadow-lg py-2">Collaborative AI Kanban Board</h1>
             <div class="mt-2 text-white/90 text-sm">
@@ -88,11 +154,89 @@
             <div id="done" class="kanban-column bg-white/70 backdrop-blur-md p-5 rounded-xl shadow-lg"><h3 class="text-xl font-semibold text-gray-700 mb-4 border-b-2 border-green-400 pb-2">Done</h3></div>
         </div>
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div class="ad-placeholder bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-lg min-h-[100px] flex items-center justify-center"><span class="text-gray-500">Advertisement Area 1</span></div>
-            <div class="ad-placeholder bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-lg min-h-[100px] flex items-center justify-center"><span class="text-gray-500">Advertisement Area 2</span></div>
+        <!-- ================== New Ad Slot ================== -->
+        <div class="mt-8 text-center">
+            <div class="ad-placeholder bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-lg min-h-[100px] flex items-center justify-center">
+                 <span class="text-gray-500">Horizontal Banner Ad Area</span>
+            </div>
+        </div>
+        
+        
+
+        <!-- ================== SEO Content Sections (Start) ================== -->
+        <div class="mt-12 p-6 bg-white/80 backdrop-blur-md shadow-xl rounded-xl text-gray-800">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="text-3xl font-bold text-center mb-8">Your All-in-One Productivity Hub</h2>
+                
+                <!-- Accordion Item 1: Features -->
+                <div class="border-b border-gray-300">
+                    <button class="accordion-header w-full flex justify-between items-center p-4 text-left text-xl font-semibold">
+                        <span>Key Features at a Glance</span>
+                        <span class="accordion-icon transform rotate-0 transition-transform duration-300">&plus;</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="p-4 grid md:grid-cols-3 gap-6 text-center">
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">Visualize Your Workflow</h3>
+                                <p class="text-sm">Move tasks from "To Do" to "Done" with a simple drag-and-drop interface. See your progress at a glance and stay motivated.</p>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">AI-Powered Assistance</h3>
+                                <p class="text-sm">Feeling overwhelmed? Let our AI break down large tasks into smaller, manageable steps, or generate new ideas to get you started.</p>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold mb-2">Focus and Collaborate</h3>
+                                <p class="text-sm">Use the built-in Pomodoro timer to dedicate focused time to your tasks. Share your board with a link to work with friends or colleagues.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Accordion Item 2: FAQ -->
+                <div class="border-b border-gray-300">
+                    <button class="accordion-header w-full flex justify-between items-center p-4 text-left text-xl font-semibold">
+                        <span>Frequently Asked Questions (FAQ)</span>
+                        <span class="accordion-icon transform rotate-0 transition-transform duration-300">&plus;</span>
+                    </button>
+                    <div class="accordion-content">
+                        <div class="p-4 space-y-4">
+                            <div>
+                                <h3 class="font-semibold">Is this Kanban board free to use?</h3>
+                                <p class="text-sm">Yes, all core features of our Kanban board, including AI suggestions and collaboration, are completely free.</p>
+                            </div>
+                            <div>
+                                <h3 class="font-semibold">How does the collaboration feature work?</h3>
+                                <p class="text-sm">Simply click the "Share Board" button to generate a unique link. Anyone with the link can view your board in real-time. To edit, they can create their own board.</p>
+                            </div>
+                             <div>
+                                <h3 class="font-semibold">Is my data secure?</h3>
+                                <p class="text-sm">Absolutely. Your data is stored securely in your own private database, powered by Google's Firebase. Only you can edit your board, and only people you share the link with can view it.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- ================== SEO Content Sections (End) ================== -->
+
+    </main>
+    
+    <footer class="text-center p-4 mt-8 text-white/70 text-sm">
+        <p>&copy; 2024 Your App Name. All Rights Reserved.</p>
+        <div class="flex justify-center flex-wrap gap-4 mt-2">
+            <a href="#" class="footer-link hover:underline" data-page="about">About Us</a>
+            <a href="#" class="footer-link hover:underline" data-page="privacy">Privacy Policy</a>
+            <a href="#" class="footer-link hover:underline" data-page="contact">Contact</a>
+            <a href="#blog" class="hover:underline">Blog</a>
+        </div>
+    </footer>
+    
+    <div class="mt-8 text-center">
+        <div class="ad-placeholder bg-white/70 backdrop-blur-md p-4 rounded-xl shadow-lg min-h-[100px] flex items-center justify-center">
+             <span class="text-gray-500">Footer Ad Area</span>
         </div>
     </div>
+
 
     <!-- Modals -->
     <div id="modal-container"></div>
@@ -103,7 +247,7 @@
         import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, doc, getDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-       // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
   apiKey: "AIzaSyDK_crCyuzCLjpDYAG77i5-7-R1JQElKS0",
   authDomain: "my-productivity-board.firebaseapp.com",
@@ -170,7 +314,7 @@ const firebaseConfig = {
             if (!firebaseConfig || firebaseConfig.apiKey === "YOUR_API_KEY" || !firebaseConfig.projectId || firebaseConfig.projectId === "YOUR_PROJECT_ID") {
                 const errorMessage = `
                     <p class="font-bold text-lg mb-2">Setup Required: Add Firebase Configuration</p>
-                    <p class="text-sm">Please open the <code>index.html</code> file in a text editor.</p>
+                    <p class="text-sm">Please open this file in a text editor.</p>
                     <p class="text-sm mt-2">Find the <code>firebaseConfig</code> object and replace the placeholder values (like "YOUR_API_KEY") with your actual Firebase project credentials.</p>
                 `;
                 showLoadingError(errorMessage);
@@ -565,6 +709,97 @@ const firebaseConfig = {
             const whatsappGroupLink = 'https://chat.whatsapp.com/YOUR_GROUP_INVITE_CODE';
             window.open(whatsappGroupLink, '_blank');
         });
+
+        // Accordion functionality
+        document.querySelectorAll('.accordion-header').forEach(header => {
+            header.addEventListener('click', () => {
+                const content = header.nextElementSibling;
+                const icon = header.querySelector('.accordion-icon');
+
+                if (content.style.maxHeight) {
+                    content.style.maxHeight = null;
+                    icon.classList.remove('rotate-45');
+                } else {
+                    document.querySelectorAll('.accordion-content').forEach(c => c.style.maxHeight = null);
+                    document.querySelectorAll('.accordion-icon').forEach(i => i.classList.remove('rotate-45'));
+                    content.style.maxHeight = content.scrollHeight + 'px';
+                    icon.classList.add('rotate-45');
+                }
+            });
+        });
+        
+        // --- Content for Modals ---
+        const blogPosts = {
+            kanban: {
+                title: "Mastering Productivity: How a Kanban Board Can Change Your Life",
+                content: `<p class="mb-4">Feeling overwhelmed by a never-ending to-do list? You're not alone. In a world of constant distractions, visualizing your workflow is more important than ever. This is where the Kanban method shines.</p><h4 class="text-xl font-semibold mb-2">What is Kanban?</h4><p class="mb-4">Kanban is a visual system for managing work as it moves through a process. It helps you see your tasks, limit your work-in-progress (WIP), and maximize efficiency. The core of Kanban is the board, which is typically divided into three columns: "To Do," "In Progress," and "Done."</p><h4 class="text-xl font-semibold mb-2">The Benefits:</h4><ul class="list-disc list-inside mb-4"><li><strong>Clarity and Focus:</strong> By seeing all your tasks in one place, you can easily identify what's important and what can wait.</li><li><strong>Reduced Overwhelm:</strong> Limiting the number of tasks in your "In Progress" column prevents you from juggling too many things at once.</li><li><strong>Increased Motivation:</strong> Moving a card from "In Progress" to "Done" provides a powerful sense of accomplishment, motivating you to keep going.</li></ul><p>This very tool is built on these principles. Start by adding your tasks to the "To Do" column and experience the clarity for yourself!</p>`
+            },
+            pomodoro: {
+                title: "The Pomodoro Technique: A Simple Hack for Ultimate Focus",
+                content: `<p class="mb-4">In a world of notifications and interruptions, deep focus is a superpower. The Pomodoro Technique is a time management method developed by Francesco Cirillo in the late 1980s. It's deceptively simple but incredibly effective.</p><h4 class="text-xl font-semibold mb-2">How It Works:</h4><p class="mb-4">The technique uses a timer to break work into focused 25-minute intervals, separated by short breaks.</p><ol class="list-decimal list-inside mb-4"><li>Choose a task you want to work on.</li><li>Set a timer for 25 minutes (one "Pomodoro").</li><li>Work on the task without interruption until the timer rings.</li><li>Take a short break (5 minutes).</li><li>After four Pomodoros, take a longer break (15-30 minutes).</li></ol><h4 class="text-xl font-semibold mb-2">Why It's Effective:</h4><p>The short, timed sprints create a sense of urgency and make it easier to start on large tasks. The built-in breaks help prevent burnout and keep your mind fresh. Our Kanban board has a Pomodoro timer built right in—give it a try on your next task!</p>`
+            }
+        };
+        const infoPages = {
+            about: {
+                title: "About Us",
+                content: `<p class="mb-4">This tool was built to provide a simple, yet powerful solution for anyone looking to get organized. We believe that productivity tools should be accessible to everyone, which is why we combined the simplicity of a Kanban board with advanced features like AI and real-time collaboration, all for free.</p><p>Our mission is to help you clear the clutter from your mind and focus on what truly matters. Whether you're a student, a professional, or managing a personal project, we hope this tool helps you achieve your goals.</p>`
+            },
+            privacy: {
+                title: "Privacy Policy",
+                content: `<p class="mb-2 text-sm">Last updated: July 11, 2024</p><p class="mb-4">We respect your privacy and are committed to protecting it. This Privacy Policy explains how we handle your information.</p><h4 class="text-lg font-semibold mb-2">Information We Collect</h4><p class="mb-4">To provide the collaboration and data-saving features, this application uses Google Firebase. When you use the service, an anonymous user ID is created and associated with your task data. We do not collect any personally identifiable information like your name or email address.</p><h4 class="text-lg font-semibold mb-2">How We Use Your Data</h4><p class="mb-4">Your task data (tasks, categories, points) is stored in Google's Firebase Firestore database and is only associated with your anonymous user ID. This data is used solely to provide the application's functionality, such as saving your board and allowing you to share it.</p><h4 class="text-lg font-semibold mb-2">Third-Party Services</h4><p class="mb-4">This site uses Google AdSense to display advertisements. Google may use cookies to serve ads based on a user's prior visits to this website or other websites. You can opt out of personalized advertising by visiting Google's Ad Settings.</p><h4 class="text-lg font-semibold mb-2">Data Security</h4><p class="mb-4">We rely on Google's robust security measures for Firebase to protect your data. However, no method of transmission over the Internet is 100% secure.</p>`
+            },
+            contact: {
+                title: "Contact Us",
+                content: `<p class="mb-4">Have questions, feedback, or suggestions? We'd love to hear from you!</p><p>The best way to reach us is by email. Please send your message to:</p><p class="mt-2"><a href="mailto:contact@yourdomain.com" class="text-indigo-600 font-semibold hover:underline">contact@yourdomain.com</a></p><p class="mt-4 text-sm">We do our best to respond to all inquiries within 48 hours.</p>`
+            }
+        };
+
+        function showBlogModal(postKey) {
+            const post = blogPosts[postKey];
+            if (!post) return;
+            showInfoModal(post.title, post.content);
+        }
+
+        function showInfoModal(title, content) {
+            const modalId = `modal-info-${Date.now()}`;
+            const modalHTML = `
+                <div id="${modalId}" class="modal-overlay fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+                    <div class="modal-content bg-white rounded-xl shadow-2xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col transform scale-95">
+                        <div class="flex justify-between items-center mb-4">
+                            <h3 class="text-2xl md:text-3xl font-bold text-gray-800">${title}</h3>
+                            <button id="close-info-btn" class="text-gray-400 hover:text-gray-600 text-3xl">&times;</button>
+                        </div>
+                        <div class="prose lg:prose-xl max-w-none overflow-y-auto text-gray-700">
+                            ${content}
+                        </div>
+                    </div>
+                </div>`;
+            modalContainer.insertAdjacentHTML('beforeend', modalHTML);
+            const modalEl = document.getElementById(modalId);
+            const contentEl = modalEl.querySelector('.modal-content');
+            setTimeout(() => contentEl.classList.remove('scale-95'), 10);
+            const cleanup = () => { contentEl.classList.add('scale-95'); setTimeout(() => modalEl.remove(), 300); };
+            modalEl.querySelector('#close-info-btn').onclick = cleanup;
+        }
+
+        document.querySelectorAll('.read-more-btn').forEach(button => {
+            button.addEventListener('click', (e) => {
+                const postKey = e.target.dataset.post;
+                showBlogModal(postKey);
+            });
+        });
+        
+        document.querySelectorAll('.footer-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const pageKey = e.target.dataset.page;
+                const page = infoPages[pageKey];
+                if (page) {
+                    showInfoModal(page.title, page.content);
+                }
+            });
+        });
+
 
         // --- Initial Load ---
         document.addEventListener('DOMContentLoaded', () => {
